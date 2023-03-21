@@ -1,4 +1,4 @@
-﻿namespace DecisionTree;
+﻿namespace DecisionMachine;
 
 public class DecisionQuery<T> : Decision where T : IEntity
 {

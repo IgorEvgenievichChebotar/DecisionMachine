@@ -1,4 +1,4 @@
-﻿namespace DecisionTree;
+﻿namespace DecisionMachine;
 
 public class Candidate : IEntity
 {

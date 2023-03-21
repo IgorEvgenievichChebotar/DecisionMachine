@@ -1,4 +1,4 @@
-﻿namespace DecisionTree;
+﻿namespace DecisionMachine;
 
 public class Program
 {
@@ -18,11 +18,12 @@ public class Program
             Skills = new List<string> { "c#", "java", "spring", "asp.net" }
         };
 
-        var decisionTree = MainDecisionTree();
-        decisionTree.Evaluate(candidate);
+        var decisionTopNode = DecisionTree();
+
+        decisionTopNode.Evaluate(candidate);
     }
 
-    static DecisionQuery<Candidate> MainDecisionTree()
+    static DecisionQuery<Candidate> DecisionTree()
     {
         var jumper = new DecisionQuery<Candidate>
         {

@@ -4,12 +4,27 @@ public static class Program
 {
     static void Main(string[] args)
     {
+        age:
         Console.Write("Возраст кандидата: ");
         var age = Convert.ToInt16(Console.ReadLine());
+        if (age < 14 || age > 70)
+        {
+            Console.WriteLine("Некорректный возраст, введи снова");
+            goto age;
+        }
+
+        exp:
         Console.Write("Опыт кандидата (месяцев): ");
         var experience = TimeSpan.FromDays(Convert.ToInt32(Console.ReadLine()) * 30);
+        if (experience.Days * 30 < 0)
+        {
+            Console.WriteLine("Некорректный опыт, введи снова");
+            goto exp;
+        }
+
         Console.Write("Рекомендации на кандидата (y/n): ");
         var referral = Convert.ToBoolean(Console.ReadLine() == "y");
+        works:
         Console.Write("Работы кандидата (название срок, название срок): ");
         var workExperience = Console.ReadLine()!.Split(", ").ToList()
             .Select(s => new Work
@@ -17,6 +32,12 @@ public static class Program
                 Name = s.Split(" ")[0],
                 Duration = TimeSpan.FromDays(Convert.ToInt32(s.Split(" ")[1]))
             }).ToList();
+        if (workExperience.Sum(w => w.Duration.Days * 30) != experience.Days)
+        {
+            Console.WriteLine("Несоответствие опыта, введи снова");
+            goto works;
+        }
+
         Console.Write("Оконченное высшее кандидата (y/n): ");
         var completedHigherEdu = Convert.ToBoolean(Console.ReadLine() == "y");
         Console.Write("Навыки кандидата (навык, навык): ");
@@ -106,6 +127,7 @@ public static class Program
         {
             Console.WriteLine(new string('-', (depth + 1) * 4) + "Отказ");
         }
+
         if (node.Positive is DecisionQuery<Candidate> positive)
         {
             PrintTree(positive, depth + 1);

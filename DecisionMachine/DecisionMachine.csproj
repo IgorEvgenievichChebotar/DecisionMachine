@@ -8,4 +8,8 @@
         <RootNamespace>DecisionMachine</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="GraphSharp" Version="1.1.0" />
+    </ItemGroup>
+
 </Project>

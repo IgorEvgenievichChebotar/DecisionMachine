@@ -7,6 +7,6 @@ public class DecisionResult : Decision
     public override void Evaluate(IEntity entity)
     {
         // todo to UI
-        Console.WriteLine(Result);
+        Console.WriteLine(Result ? "оффер" : "отказ");
     }
 }

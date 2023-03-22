@@ -1,78 +1,118 @@
 ﻿namespace DecisionMachine;
 
-public class Program
+public static class Program
 {
     static void Main(string[] args)
     {
+        Console.Write("Возраст кандидата: ");
+        var age = Convert.ToInt16(Console.ReadLine());
+        Console.Write("Опыт кандидата (месяцев): ");
+        var experience = TimeSpan.FromDays(Convert.ToInt32(Console.ReadLine()) * 30);
+        Console.Write("Рекомендации на кандидата (y/n): ");
+        var referral = Convert.ToBoolean(Console.ReadLine() == "y");
+        Console.Write("Работы кандидата (название срок, название срок): ");
+        var workExperience = Console.ReadLine()!.Split(", ").ToList()
+            .Select(s => new Work
+            {
+                Name = s.Split(" ")[0],
+                Duration = TimeSpan.FromDays(Convert.ToInt32(s.Split(" ")[1]))
+            }).ToList();
+        Console.Write("Оконченное высшее кандидата (y/n): ");
+        var completedHigherEdu = Convert.ToBoolean(Console.ReadLine() == "y");
+        Console.Write("Навыки кандидата (навык, навык): ");
+        var skills = Console.ReadLine()!.Split(", ").ToList();
+
+        Console.WriteLine("----------------------------------------------------");
+
         var candidate = new Candidate
         {
-            Age = 21,
-            Experience = TimeSpan.FromDays(30 * 14),
-            Referral = true,
-            WorkExperience = new List<Work>
-            {
-                new() { Name = "ООО ВНИИЖТ", Duration = TimeSpan.FromDays(30 * 6) },
-                new() { Name = "Фриланс", Duration = TimeSpan.FromDays(30 * 8) }
-            },
-            CompletedHigherEdu = true,
-            Skills = new List<string> { "c#", "java", "spring", "asp.net" }
+            Age = age,
+            Experience = experience,
+            Referral = referral,
+            WorkExperience = workExperience,
+            CompletedHigherEdu = completedHigherEdu,
+            Skills = skills
         };
 
         var decisionTopNode = DecisionTree();
 
         decisionTopNode.Evaluate(candidate);
+
+        decisionTopNode.PrintTree();
+
+
+        static DecisionQuery<Candidate> DecisionTree()
+        {
+            var jumper = new DecisionQuery<Candidate>
+            {
+                Title = "Часто ли менял работу кандидат? (на каждой меньше 5 месяцев)",
+                Test = c => c.WorkExperience.Any(w => w.Duration < TimeSpan.FromDays(30 * 5)),
+                Negative = new DecisionResult { Result = false },
+                Positive = new DecisionResult { Result = true }
+            };
+
+            var referral = new DecisionQuery<Candidate>
+            {
+                Title = "Есть ли рекомендации на этого кандидата?",
+                Test = c => c.Referral,
+                Negative = new DecisionResult { Result = false },
+                Positive = jumper
+            };
+
+            var education = new DecisionQuery<Candidate>
+            {
+                Title = "Имеет ли кандидат оконченное высшее образование?",
+                Test = c => c.CompletedHigherEdu,
+                Negative = new DecisionResult { Result = false },
+                Positive = referral
+            };
+
+            var skills = new DecisionQuery<Candidate>
+            {
+                Title = "Навыки кандидата соответствуют требованиям в вакансии?",
+                Test = c => c.Skills.Contains("java") && c.Skills.Contains("c#"),
+                Negative = referral,
+                Positive = new DecisionResult { Result = true }
+            };
+
+            var workExpRequirements = new DecisionQuery<Candidate>
+            {
+                Title = "Опыт работы >= требованиям в вакансии?",
+                Test = c => c.Experience >= TimeSpan.FromDays(365),
+                Negative = education,
+                Positive = skills
+            };
+
+            var workExp = new DecisionQuery<Candidate>
+            {
+                Title = "Имеет ли кандидат опыт работы?",
+                Test = c => c.Experience > TimeSpan.Zero,
+                Negative = new DecisionResult { Result = false },
+                Positive = workExpRequirements
+            };
+
+            return workExp;
+        }
     }
 
-    static DecisionQuery<Candidate> DecisionTree()
+    static void PrintTree(this DecisionQuery<Candidate> node, int depth = 0)
     {
-        var jumper = new DecisionQuery<Candidate>
+        Console.WriteLine(new string(' ', depth * 4) + node.Title);
+        if (node.Negative is DecisionQuery<Candidate> negative)
         {
-            Title = "Часто ли менял работу кандидат? (на каждой меньше 5 месяцев)",
-            Test = c => c.WorkExperience.Any(w => w.Duration < TimeSpan.FromDays(30 * 5)),
-            Negative = new DecisionResult { Result = false },
-            Positive = new DecisionResult { Result = true }
-        };
-
-        var referral = new DecisionQuery<Candidate>
+            PrintTree(negative, depth + 1);
+        }
+        else
         {
-            Title = "Есть ли рекомендации на этого кандидата?",
-            Test = c => c.Referral,
-            Negative = new DecisionResult { Result = false },
-            Positive = jumper
-        };
-
-        var education = new DecisionQuery<Candidate>
+            Console.WriteLine(new string('-', (depth + 1) * 4) + "Отказ");
+        }
+        if (node.Positive is DecisionQuery<Candidate> positive)
         {
-            Title = "Имеет ли кандидат оконченное высшее образование?",
-            Test = c => c.CompletedHigherEdu,
-            Negative = new DecisionResult { Result = false },
-            Positive = referral
-        };
-
-        var skills = new DecisionQuery<Candidate>
+            PrintTree(positive, depth + 1);
+        }
+        else
         {
-            Title = "Навыки кандидата соответствуют требованиям в вакансии?",
-            Test = c => c.Skills.Contains("java") && c.Skills.Contains("c#"),
-            Negative = referral,
-            Positive = new DecisionResult { Result = true }
-        };
-
-        var workExpRequirements = new DecisionQuery<Candidate>
-        {
-            Title = "Опыт работы >= требованиям в вакансии?",
-            Test = c => c.Experience >= TimeSpan.FromDays(365),
-            Negative = education,
-            Positive = skills
-        };
-
-        var workExp = new DecisionQuery<Candidate>
-        {
-            Title = "Имеет ли кандидат опыт работы?",
-            Test = c => c.Experience > TimeSpan.Zero,
-            Negative = new DecisionResult { Result = false },
-            Positive = workExpRequirements
-        };
-
-        return workExp;
+            Console.WriteLine(new string('-', (depth + 1) * 4) + "Оффер");
+        }
     }
 }
